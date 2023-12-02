@@ -1082,4 +1082,4 @@ export type Endpoints = {
  */
 export const endpointReqTypes = {
 	'drive/files/create': 'multipart/form-data',
-} as const satisfies { [K in keyof Endpoints]?: 'multipart/form-data'; };
+} as const satisfies { [K in keyof Endpoints]?: 'multipart/form-data' };
