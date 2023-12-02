@@ -4266,6 +4266,7 @@ export interface Locale extends ILocale {
      * アカウントが削除されます。よろしいですか？
      */
     "deleteAccountConfirm": string;
+    "truncateAccountConfirm": string;
     /**
      * パスワードが間違っています。
      */
@@ -4470,6 +4471,7 @@ export interface Locale extends ILocale {
      * アカウント削除
      */
     "deleteAccount": string;
+    "truncateAccount": string;
     /**
      * ドキュメント
      */
@@ -8261,6 +8263,28 @@ export interface Locale extends ILocale {
         "started": string;
         /**
          * 削除が進行中
+         */
+        "inProgress": string;
+    };
+    "_accountTruncate": {
+        /**
+         * アカウントの整理
+         */
+        "accountDelete": string;
+        /**
+         * アカウントの整理は負荷のかかる処理であるため、作成したコンテンツの数やアップロードしたファイルの数が多いと完了までに時間がかかることがあります。
+         */
+        "mayTakeTime": string;
+        /**
+         * アカウント整理をリクエスト
+         */
+        "requestAccountTruncate": string;
+        /**
+         * 整理処理が開始されました。
+         */
+        "started": string;
+        /**
+         * 整理が進行中
          */
         "inProgress": string;
     };
