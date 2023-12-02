@@ -237,6 +237,7 @@ export class QueueProcessorService implements OnApplicationShutdown {
 					case 'deleteAccount': return this.deleteAccountProcessorService.process(job);
 					case 'truncateAccount': return this.truncateAccountProcessorService.process(job);
 					case 'reportAbuse': return this.reportAbuseProcessorService.process(job);
+					case 'truncateAccount': return this.truncateAccountProcessorService.process(job);
 					default: throw new Error(`unrecognized job type ${job.name} for db`);
 				}
 			};
