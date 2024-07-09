@@ -7,10 +7,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 <div v-if="meta" class="rsqzvsbo">
 	<MkFeaturedPhotos class="bg"/>
 	<XTimeline class="tl"/>
-	<div class="shape1"></div>
-	<div class="shape2"></div>
+	<!-- <div class="shape1"></div>
+	<div class="shape2"></div> -->
 	<div class="logo-wrapper">
-		<div class="powered-by">Powered by</div>
+		<!-- <div class="powered-by">Powered by</div> -->
 		<img :src="cherrypicksvg" class="cherrypick"/>
 	</div>
 	<div class="emojis">
@@ -41,13 +41,13 @@ import * as Misskey from 'cherrypick-js';
 import XTimeline from './welcome.timeline.vue';
 import MarqueeText from '@/components/MkMarquee.vue';
 import MkFeaturedPhotos from '@/components/MkFeaturedPhotos.vue';
-import cherrypicksvg from '/client-assets/cherrypick.svg';
+import cherrypicksvg from '/client-assets/yodangang.png';
 import misskeysvg from '/client-assets/misskey.svg';
-import { misskeyApiGet } from '@/scripts/misskey-api.js';
+import { misskeyApi, misskeyApiGet } from '@/scripts/misskey-api.js';
 import MkVisitorDashboard from '@/components/MkVisitorDashboard.vue';
 import { getProxiedImageUrl } from '@/scripts/media-proxy.js';
-import { instance as meta } from '@/instance.js';
 
+const meta = ref<Misskey.entities.MetaResponse>();
 const instances = ref<Misskey.entities.FederationInstance[]>();
 
 function getInstanceIcon(instance: Misskey.entities.FederationInstance): string {
@@ -57,6 +57,10 @@ function getInstanceIcon(instance: Misskey.entities.FederationInstance): string 
 
 	return getProxiedImageUrl(instance.iconUrl, 'preview');
 }
+
+misskeyApi('meta', { detail: true }).then(_meta => {
+	meta.value = _meta;
+});
 
 misskeyApiGet('federation/instances', {
 	sort: '+pubSub',
@@ -73,7 +77,7 @@ misskeyApiGet('federation/instances', {
 		position: fixed;
 		top: 0;
 		right: 0;
-		width: 80vw; // 100%からshapeの幅を引いている
+		width: 100vw; // 100%からshapeの幅を引いている
 		height: 100vh;
 	}
 
@@ -129,9 +133,9 @@ misskeyApiGet('federation/instances', {
 		}
 
 		> .misskey, .cherrypick {
-			width: 140px;
+			width: 60px;
 			@media (max-width: 450px) {
-				width: 130px;
+				width: 50px;
 			}
 		}
 	}
