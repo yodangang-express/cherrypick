@@ -30,3 +30,5 @@ packages/*/.vscode/
 packages/backend/test/compose.yml
 
 .pnpm-store/
+
+/*.sql
