@@ -7,10 +7,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 <div v-if="meta" :class="$style.root">
 	<MkFeaturedPhotos :class="$style.bg"/>
 	<XTimeline :class="$style.tl"/>
-	<div :class="$style.shape1"></div>
-	<div :class="$style.shape2"></div>
+	<!-- <div :class="$style.shape1"></div> -->
+	<!-- <div :class="$style.shape2"></div> -->
 	<div :class="$style.logoWrapper">
-		<div :class="$style.poweredBy">Powered by</div>
+		<!-- <div :class="$style.poweredBy">Powered by</div> -->
 		<img :src="cherrypicksvg" :class="$style.cherrypick"/>
 	</div>
 	<div :class="$style.contents">
@@ -34,13 +34,13 @@ import * as Misskey from 'cherrypick-js';
 import XTimeline from './welcome.timeline.vue';
 import MkMarqueeText from '@/components/MkMarqueeText.vue';
 import MkFeaturedPhotos from '@/components/MkFeaturedPhotos.vue';
-import cherrypicksvg from '/client-assets/cherrypick.svg';
+import cherrypicksvg from '/client-assets/yodangang.png';
 import misskeysvg from '/client-assets/misskey.svg';
-import { misskeyApiGet } from '@/utility/misskey-api.js';
+import { misskeyApi, misskeyApiGet } from '@/utility/misskey-api.js';
 import MkVisitorDashboard from '@/components/MkVisitorDashboard.vue';
 import { getProxiedImageUrl } from '@/utility/media-proxy.js';
-import { instance as meta } from '@/instance.js';
 
+const meta = ref<Misskey.entities.MetaResponse>();
 const instances = ref<Misskey.entities.FederationInstance[]>();
 
 function getInstanceIcon(instance: Misskey.entities.FederationInstance): string {
@@ -50,6 +50,10 @@ function getInstanceIcon(instance: Misskey.entities.FederationInstance): string 
 
 	return getProxiedImageUrl(instance.iconUrl, 'preview');
 }
+
+misskeyApi('meta', { detail: true }).then(_meta => {
+	meta.value = _meta;
+});
 
 misskeyApiGet('federation/instances', {
 	sort: '+pubSub',
@@ -128,10 +132,10 @@ misskeyApiGet('federation/instances', {
 }
 
 .misskey, .cherrypick {
-	width: 120px;
+	width: 60px;
 
 	@media (max-width: 450px) {
-		width: 100px;
+		width: 50px;
 	}
 }
 

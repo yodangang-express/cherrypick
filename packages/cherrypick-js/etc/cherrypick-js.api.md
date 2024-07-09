@@ -1991,6 +1991,7 @@ declare namespace entities {
         IChangePasswordRequest,
         IClaimAchievementRequest,
         IDeleteAccountRequest,
+        ITruncateAccountRequest,
         IExportFollowingRequest,
         IFavoritesRequest,
         IFavoritesResponse,
@@ -2886,6 +2887,8 @@ export interface IStream extends EventEmitter<StreamEvents> {
     // (undocumented)
     useChannel<C extends keyof Channels>(channel: C, params?: Channels[C]['params'], name?: string): IChannelConnection<Channels[C]>;
 }
+
+type ITruncateAccountRequest = operations['i___truncate-account']['requestBody']['content']['application/json'];
 
 // @public (undocumented)
 type ITruncateAccountRequest = operations['i___truncate-account']['requestBody']['content']['application/json'];

@@ -3813,3 +3813,6 @@ _deliveryTargetControl:
   deliveryTargetsInclude: "일부 서버에서만 공개됨"
   deliveryTargetsExclude: "일부 서버에서 비공개됨"
   hasDeliveryTargets: "배포 대상이 선택되어 있어요"
+_yodangang:
+  anonymousChannel: "익명 채널"
+  anonymousUsername: "익명의 유령"

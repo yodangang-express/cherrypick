@@ -213,6 +213,10 @@ export const packedNoteSchema = {
 					type: 'boolean',
 					optional: false, nullable: false,
 				},
+				anonymous: {
+					type: 'boolean',
+					optional: false, nullable: true,
+				},
 				userId: {
 					type: 'string',
 					optional: false, nullable: true,

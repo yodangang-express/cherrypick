@@ -3810,3 +3810,6 @@ _deliveryTargetControl:
   deliveryTargetsInclude: "Public only to some servers"
   deliveryTargetsExclude: "Not public to some servers"
   hasDeliveryTargets: "Delivery targets are selected"
+_yodangang:
+  anonymousChannel: "Anonymous channel"
+  anonymousUsername: "Anonymous"
