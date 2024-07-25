@@ -7,6 +7,13 @@ RUN apt update -y &&\
   chmod 500 nsolid_setup_deb.sh &&\
   ./nsolid_setup_deb.sh 20 &&\
   apt install -y nodejs &&\
-  npm i -g npm pnpm typescript vite @swc/cli typeorm &&\
-  apt clean &&\
+  npm i -g npm pnpm typescript vite @swc/cli typeorm
+
+RUN apt-get install -y lsb-release &&\
+  echo "deb https://packages.cloud.google.com/apt gcsfuse-$(lsb_release -c -s) main" | tee /etc/apt/sources.list.d/gcsfuse.list &&\
+  curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - &&\
+  apt-get update -y &&\
+  apt-get install -y fuse gcsfuse
+
+RUN apt clean &&\
   rm -rf /var/lib/apt/lists
