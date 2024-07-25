@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cherrypick
+  namespace: cherrypick
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      name: cherrypick
+  template:
+    metadata:
+      labels:
+        name: cherrypick
+    spec:
+      containers:
+      - name: cherrypick
+        image: juunini/cherrypick:latest
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
+        volumeMounts:
+        - name: creds
+          mountPath: /etc/gcp
+          readOnly: true
+        - name: config
+          mountPath: /cherrypick/.config
+          readOnly: true
+        ports:
+          - name: http
+            containerPort: 3000
+            protocol: TCP
+        env:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /etc/gcp/creds.json
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - SYS_ADMIN
+        lifecycle:
+          postStart:
+            exec:
+              command: ["gcsfuse", "-o", "allow_other", "yodangang-express", "/cherrypick/files"]
+          preStop:
+            exec:
+              command: ["fusermount", "-u", "/cherrypick/files"]
+      volumes:
+        - name: creds
+          secret:
+            secretName: gcloud
+            items:
+            - key: creds
+              path: creds.json
+        - name: config
+          secret:
+            secretName: cherrypick
+            items:
+            - key: config
+              path: default.yml

@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: cherrypick
+spec:
+  selector:
+    matchLabels:
+      name: postgres
+  template:
+    metadata:
+      labels:
+        name: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16.3-alpine
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
+        ports:
+          - containerPort: 5432
+        env:
+          - name: POSTGRES_USER
+            value: postgres
+          - name: POSTGRES_PASSWORD
+            value: "1234"
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgres
+      volumes:
+      - name: postgres
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: cherrypick
+  labels:
+    name: postgres
+spec:
+  selector:
+    name: postgres
+  ports:
+    - port: 5432
+      protocol: TCP
+      targetPort: 5432
