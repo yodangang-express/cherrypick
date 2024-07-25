@@ -1,11 +1,10 @@
-FROM juunini/cherrypick:builder-0.1 AS base
+FROM juunini/cherrypick-builder:latest AS base
 
 FROM base AS builder
 COPY . /cherrypick
 WORKDIR /cherrypick
 USER root
 ENV NODE_ENV=production
-ENV VITE_CLOUD_STORAGE_ORIGIN=https://storage.googleapis.com/yodangang-express/
 RUN git submodule update --init &&\
   corepack enable &&\
   pnpm install &&\
@@ -13,18 +12,20 @@ RUN git submodule update --init &&\
 
 FROM base
 WORKDIR /cherrypick
+USER root
 RUN mkdir -p /cherrypick/packages/backend &&\
   mkdir -p /cherrypick/packages/frontend &&\
   mkdir -p /cherrypick/packages/cherrypick-js &&\
   mkdir -p /cherrypick/packages/misskey-reversi &&\
-  mkdir -p /cherrypick/.config
+  mkdir -p /cherrypick/.config &&\
+  mkdir -p /cherrypick/files
 COPY --from=builder /cherrypick/built /cherrypick/built
 COPY --from=builder /cherrypick/package.json /cherrypick/package.json
 COPY --from=builder /cherrypick/pnpm-workspace.yaml /cherrypick/pnpm-workspace.yaml
 COPY --from=builder /cherrypick/healthcheck.sh /cherrypick/healthcheck.sh
 COPY --from=builder /cherrypick/node_modules /cherrypick/node_modules
 COPY --from=builder /cherrypick/packages/backend/package.json /cherrypick/packages/backend/package.json
-COPY --from=builder /cherrypick/packages/backend/scripts/check_connect.js /cherrypick/packages/backend/scripts/check_connect.js
+COPY --from=builder /cherrypick/packages/backend/check_connect.js /cherrypick/packages/backend/check_connect.js
 COPY --from=builder /cherrypick/packages/backend/ormconfig.js /cherrypick/packages/backend/ormconfig.js
 COPY --from=builder /cherrypick/packages/backend/node_modules /cherrypick/packages/backend/node_modules
 COPY --from=builder /cherrypick/packages/backend/built /cherrypick/packages/backend/built
@@ -46,4 +47,4 @@ ENV NODE_ENV=production
 HEALTHCHECK --interval=5s --retries=20 CMD ["/bin/bash", "/cherrypick/healthcheck.sh"]
 ENTRYPOINT ["/usr/bin/tini", "--"]
 EXPOSE 3000
-CMD ["pnpm", "run", "migrateandstart"]
+CMD pnpm run migrateandstart

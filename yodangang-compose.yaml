@@ -26,18 +26,19 @@ services:
     #   mode: replicated
     #   replicas: 2
     #   endpoint_mode: vip
-    image: 'cherrypick:latest'
+    image: 'juunini/cherrypick:latest'
     volumes:
       - ./volumes/cherrypick/.config/default.yml:/cherrypick/.config/default.yml
       - ./volumes/cherrypick/files:/cherrypick/files
-    environment:
-      - CLOUD_STORAGE_ORIGIN=https://storage.googleapis.com/yodangang-express/
+      - ./volumes/cherrypick/creds.json:/cherrypick/creds.json
+      - ./entrypoint.sh:/cherrypick/entrypoint.sh
     depends_on:
     - redis
     - postgres
-    # - nginx
+    - nginx
     ports:
       - 3000:3000
+    privileged: true
 
   inotify:
     container_name: inotify
