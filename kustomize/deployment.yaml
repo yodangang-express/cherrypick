@@ -4,7 +4,6 @@ metadata:
   name: cherrypick
   namespace: cherrypick
 spec:
-  replicas: 2
   selector:
     matchLabels:
       name: cherrypick
@@ -42,6 +41,30 @@ spec:
           capabilities:
             add:
               - SYS_ADMIN
+        livenessProbe:
+          httpGet:
+            path: /.well-known/nodeinfo
+            port: 3000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          failureThreshold: 3
+          timeoutSeconds: 1
+        readinessProbe:
+          httpGet:
+            path: /.well-known/nodeinfo
+            port: 3000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          failureThreshold: 3
+          timeoutSeconds: 1
+        startupProbe:
+          httpGet:
+            path: /.well-known/nodeinfo
+            port: 3000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          failureThreshold: 3
+          timeoutSeconds: 1
         lifecycle:
           postStart:
             exec:
