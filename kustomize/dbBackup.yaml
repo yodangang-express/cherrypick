@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: db-backup
+  namespace: cherrypick
+spec:
+  schedule: "0 4,16 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+            - name: creds
+              secret:
+                secretName: gcloud
+                items:
+                - key: creds
+                  path: creds.json
+            - name: pgpass-volume
+              secret:
+                secretName: pgpass-secret
+                defaultMode: 384
+          containers:
+            - name: db-backup
+              image: juunini/postgres-gsutil:latest
+              env:
+                - name: PGPASSFILE
+                  value: /.pgpass
+                - name: GOOGLE_APPLICATION_CREDENTIALS
+                  value: /etc/gcp/creds.json
+              command:
+                - /bin/bash
+                - -c
+              args:
+                - mkdir backup && pg_dump -Fc -C -h postgres.cherrypick.svc -U postgres -d cherrypick -f /backup/$(date '+%Y-%m-%d-%H-%M').dump && /google-cloud-sdk/bin/gcloud auth activate-service-account --key-file /etc/gcp/creds.json && /google-cloud-sdk/bin/gsutil cp /backup/*.dump gs://yodangang-express-backup/postgres/
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 1Gi
+              volumeMounts:
+                - name: creds
+                  mountPath: /etc/gcp
+                  readOnly: true
+                - name: pgpass-volume
+                  mountPath: /.pgpass
+                  subPath: .pgpass
+                  readOnly: true
+          restartPolicy: OnFailure
