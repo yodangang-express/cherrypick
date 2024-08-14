@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-dev
+  namespace: cherrypick
+spec:
+  selector:
+    matchLabels:
+      name: postgres-dev
+  template:
+    metadata:
+      labels:
+        name: postgres-dev
+    spec:
+      containers:
+      - name: postgres-dev
+        image: postgres:16.3-alpine
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
+        ports:
+          - containerPort: 5432
+        env:
+          - name: POSTGRES_USER
+            value: postgres
+          - name: POSTGRES_PASSWORD
+            value: "1234"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-dev
+  namespace: cherrypick
+  labels:
+    name: postgres-dev
+spec:
+  selector:
+    name: postgres-dev
+  ports:
+    - port: 5432
+      protocol: TCP
+      targetPort: 5432
