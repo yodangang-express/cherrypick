@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc-dev
+  namespace: cherrypick
+spec:
+  storageClassName: ""
+  volumeName: postgres-pv-dev
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 30Gi
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv-dev
+  namespace: cherrypick
+spec:
+  storageClassName: ""
+  claimRef:
+    name: postgres-pvc-dev
+    namespace: cherrypick
+  capacity:
+    storage: 30Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data-dev
