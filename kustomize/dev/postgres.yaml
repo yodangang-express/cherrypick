@@ -17,11 +17,11 @@ spec:
         image: postgres:16.3-alpine
         resources:
           requests:
-            memory: "2Gi"
-            cpu: "1"
+            memory: "0.5Gi"
+            cpu: "500m"
           limits:
-            memory: "2Gi"
-            cpu: "1"
+            memory: "0.5Gi"
+            cpu: "500m"
         ports:
           - containerPort: 5432
         env:
