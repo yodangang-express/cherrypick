@@ -15,6 +15,7 @@ spec:
       containers:
       - name: cherrypick
         image: juunini/cherrypick:latest
+        imagePullPolicy: Always
         resources:
           requests:
             memory: "2Gi"
