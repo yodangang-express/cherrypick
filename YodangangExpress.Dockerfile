@@ -1,13 +1,24 @@
-FROM debian:bullseye-slim AS base
+FROM debian:bullseye-20241016-slim AS base
 
-RUN apt update -y &&\
-  apt install -y git python3 make g++ ffmpeg curl libjemalloc-dev libjemalloc2 tini &&\
-  ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so &&\
-  curl -SLO https://deb.nodesource.com/nsolid_setup_deb.sh &&\
-  chmod 500 nsolid_setup_deb.sh &&\
-  ./nsolid_setup_deb.sh 20 &&\
-  apt install -y nodejs &&\
-  npm i -g npm pnpm typescript vite @swc/cli typeorm
+RUN rm /var/lib/dpkg/info/libc-bin.* &&\
+    apt clean -y &&\
+    apt update -y &&\
+    apt install -y libc-bin \
+    git \
+    python3 \
+    make \
+    g++ \
+    ffmpeg \
+    curl \
+    libjemalloc-dev \
+    libjemalloc2 \
+    tini &&\
+    ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so &&\
+    curl -SLO https://deb.nodesource.com/nsolid_setup_deb.sh &&\
+    chmod 500 nsolid_setup_deb.sh &&\
+    ./nsolid_setup_deb.sh 20 &&\
+    apt install -y nodejs &&\
+    npm i -g npm pnpm typescript vite @swc/cli typeorm
 
 RUN apt-get install -y lsb-release &&\
   echo "deb https://packages.cloud.google.com/apt gcsfuse-$(lsb_release -c -s) main" | tee /etc/apt/sources.list.d/gcsfuse.list &&\
