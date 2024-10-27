@@ -18,12 +18,19 @@ spec:
         resources:
           requests:
             memory: "1Gi"
-            cpu: "1"
+            cpu: "500m"
           limits:
             memory: "2Gi"
             cpu: "1"
         ports:
           - containerPort: 6379
+        volumeMounts:
+          - mountPath: /data
+            name: redis
+      volumes:
+      - name: redis
+        persistentVolumeClaim:
+          claimName: redis-pvc
 
 ---
 
