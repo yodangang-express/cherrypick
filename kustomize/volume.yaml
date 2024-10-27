@@ -30,3 +30,38 @@ spec:
     - ReadWriteOnce
   hostPath:
     path: /data
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: cherrypick
+spec:
+  storageClassName: ""
+  volumeName: redis-pv
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: redis-pv
+  namespace: cherrypick
+spec:
+  storageClassName: ""
+  claimRef:
+    name: redis-pvc
+    namespace: cherrypick
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /redis
