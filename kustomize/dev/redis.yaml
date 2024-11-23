@@ -12,6 +12,15 @@ spec:
       labels:
         name: redis-dev
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: redis-dev
+                operator: In
+                values:
+                  - "true"
       containers:
       - name: redis-dev
         image: redis:7.2.4-alpine3.19
