@@ -73,6 +73,13 @@ spec:
           preStop:
             exec:
               command: ["fusermount", "-u", "/cherrypick/files"]
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/location
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            name: cherrypick
       volumes:
         - name: creds
           secret:
