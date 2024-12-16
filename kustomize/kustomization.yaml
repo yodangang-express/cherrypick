@@ -14,3 +14,12 @@ resources:
   - issuer.yaml
   - ingress.yaml
   - dbBackup.yaml
+
+helmCharts:
+  - name: redis
+    repo: https://charts.bitnami.com/bitnami
+    version: 20.3.0
+    releaseName: redis-ha
+    namespace: cherrypick
+    valuesFile: redis-values.yaml
+    includeCRDs: true
