@@ -1,0 +1,41 @@
+# helm upgrade --install cnpg --namespace cnpg-system --create-namespace cnpg/cloudnative-pg
+
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: cnpg
+  namespace: cherrypick
+spec:
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.2-17
+  instances: 3
+  storage:
+    size: 60Gi
+  postgresql:
+    parameters:
+      timezone: "Asia/Seoul"
+    pg_hba:
+      - host all postgres all trust
+  primaryUpdateStrategy: unsupervised
+  enableSuperuserAccess: true
+  bootstrap:
+    initdb:
+      database: cherrypick
+      owner: postgres
+      encoding: UTF8
+      localeCType: C
+      localeCollate: C
+  managed:
+    roles:
+      - name: cherrypick
+        ensure: present
+        superuser: true
+        login: true
+        passwordSecret:
+          name: cnpg
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/location
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          name: cherrypick
