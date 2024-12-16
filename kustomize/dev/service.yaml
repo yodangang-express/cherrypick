@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: cherrypick-dev
-  namespace: cherrypick
+  name: cherrypick
+  namespace: cherrypick-dev
 spec:
   selector:
-    name: cherrypick-dev
+    name: cherrypick
   ports:
     - protocol: TCP
       port: 80

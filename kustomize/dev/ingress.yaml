@@ -2,7 +2,7 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: https-redirectscheme-dev
-  namespace: cherrypick
+  namespace: cherrypick-dev
 spec:
   redirectScheme:
     permanent: true
@@ -14,7 +14,7 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: cherrypick-secure-dev
-  namespace: cherrypick
+  namespace: cherrypick-dev
 spec:
   entryPoints:
     - websecure
@@ -22,7 +22,7 @@ spec:
     - match: Host(`dev.yodangang.express`)
       kind: Rule
       services:
-        - name: cherrypick-dev
+        - name: cherrypick
           port: 80
   tls:
     secretName: cherrypick-cert-dev
@@ -33,7 +33,7 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: cherryipck-redirect-dev
-  namespace: cherrypick
+  namespace: cherrypick-dev
 spec:
   entryPoints:
     - web
@@ -41,7 +41,7 @@ spec:
     - match: Host(`dev.yodangang.express`)
       kind: Rule
       services:
-        - name: cherrypick-dev
+        - name: cherrypick
           port: 80
       middlewares:
         - name: https-redirectscheme-dev
