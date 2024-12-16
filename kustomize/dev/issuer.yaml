@@ -2,7 +2,7 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: letsencrypt-dev
-  namespace: cherrypick
+  namespace: cherrypick-dev
 spec:
   acme:
     email: juuni.ni.i@gmail.com
@@ -21,7 +21,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: cherrypick-cert-dev
-  namespace: cherrypick
+  namespace: cherrypick-dev
 spec:
   commonName: dev.yodangang.express
   secretName: cherrypick-cert-dev
