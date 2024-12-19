@@ -32,7 +32,7 @@ spec:
                 - /bin/bash
                 - -c
               args:
-                - mkdir backup && pg_dump -Fc -C -h postgres.cherrypick.svc -U postgres -d cherrypick -f /backup/$(date '+%Y-%m-%d-%H-%M').dump && /google-cloud-sdk/bin/gcloud auth activate-service-account --key-file /etc/gcp/creds.json && /google-cloud-sdk/bin/gsutil cp /backup/*.dump gs://yodangang-express-backup/postgres/
+                - mkdir backup && pg_dump -Fc -C -h cnpg-ro.cherrypick.svc -U postgres -d cherrypick -f /backup/$(date '+%Y-%m-%d-%H-%M').dump && /google-cloud-sdk/bin/gcloud auth activate-service-account --key-file /etc/gcp/creds.json && /google-cloud-sdk/bin/gsutil cp /backup/*.dump gs://yodangang-express-backup/postgres/
               resources:
                 requests:
                   cpu: 500m
