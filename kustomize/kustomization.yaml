@@ -13,7 +13,6 @@ resources:
   - service.yaml
   - issuer.yaml
   - ingress.yaml
-  - dbBackup.yaml
 
 helmCharts:
   - name: redis

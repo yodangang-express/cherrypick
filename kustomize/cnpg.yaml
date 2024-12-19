@@ -39,3 +39,26 @@ spec:
       labelSelector:
         matchLabels:
           name: cherrypick
+  backup:
+    retentionPolicy: "7d"
+    barmanObjectStore:
+      destinationPath: gs://yodangang-express-backup/
+      googleCredentials:
+        applicationCredentials:
+          name: gcloud
+          key: creds
+      data:
+        compression: gzip
+
+---
+
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: cnpg-backup
+  namespace: cherrypick
+spec:
+  schedule: "0 0 19 * * *"
+  backupOwnerReference: self
+  cluster:
+    name: cnpg
