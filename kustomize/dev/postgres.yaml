@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: cherrypick-dev
+spec:
+  selector:
+    matchLabels:
+      name: postgres
+  template:
+    metadata:
+      labels:
+        name: postgres
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: postgres-dev
+                operator: In
+                values:
+                  - "true"
+      containers:
+      - name: postgres
+        image: postgres:16.3-alpine
+        resources:
+          requests:
+            memory: "0.5Gi"
+            cpu: "500m"
+          limits:
+            memory: "0.5Gi"
+            cpu: "500m"
+        ports:
+          - containerPort: 5432
+        env:
+          - name: POSTGRES_USER
+            value: postgres
+          - name: POSTGRES_PASSWORD
+            value: "1234"
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgres
+      volumes:
+      - name: postgres
+        persistentVolumeClaim:
+          claimName: postgres-pvc-dev
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: cherrypick-dev
+  labels:
+    name: postgres
+spec:
+  selector:
+    name: postgres
+  ports:
+    - port: 5432
+      protocol: TCP
+      targetPort: 5432
