@@ -3,7 +3,7 @@ import { MiUser } from '@/models/User.js';
 
 const moderators: string[] = process.env.MODERATORS?.split(',') ?? [];
 
-export function anonymizeNote(note: MiNote | any, maskingContents = false, meId: string | null = ''): void {
+export function anonymizeNote(note: MiNote | any, meId: string | null = '') {
 	if (moderators.includes(meId ?? '')) {
 		return note;
 	}
@@ -17,17 +17,19 @@ export function anonymizeNote(note: MiNote | any, maskingContents = false, meId:
 	note.renoteUserId = note.replyUserId ? 'anonymous' : null;
 	note.mentions = [];
 
-	if (maskingContents) {
+	if (meId == null) {
 		note.text = '(Unauthorized)';
 	}
 
 	if (note.renote) {
-		anonymizeNote(note.renote, maskingContents);
+		note.renote = anonymizeNote(note.renote, meId);
 	}
 
 	if (note.reply) {
-		anonymizeNote(note.reply, maskingContents);
+		note.reply = anonymizeNote(note.reply, meId);
 	}
+
+	return note;
 }
 
 export function anonymousUser() {
