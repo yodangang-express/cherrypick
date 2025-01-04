@@ -98,4 +98,10 @@ export class MiChannel {
 		default: true,
 	})
 	public allowRenoteToExternal: boolean;
+
+	@Column('boolean', {
+		nullable: true,
+		default: false,
+	})
+	public anonymous: boolean;
 }
