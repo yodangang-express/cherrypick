@@ -486,7 +486,7 @@ export class NoteEntityService implements OnModuleInit {
 		}
 
 		if (packed.channel?.anonymous) {
-			anonymizeNote(packed, meId == null, meId);
+			anonymizeNote(packed, (meId ?? me?.id) == null, meId ?? me?.id);
 		}
 
 		return packed;
