@@ -8,16 +8,21 @@ export function anonymizeNote(note: MiNote | any, meId: string | null = '') {
 		return note;
 	}
 
-	note.user = anonymousUser();
-	note.userId = 'anonymous';
-	note.cw = null;
-	note.fileIds = [];
-	note.files = [];
+	const noteUserId = note.userId || note.user?.id;
+
+	if (meId !== noteUserId) {
+		note.user = anonymousUser();
+		note.userId = 'anonymous';
+	}
+
 	note.replyUserId = note.replyUserId ? 'anonymous' : null;
 	note.renoteUserId = note.replyUserId ? 'anonymous' : null;
-	note.mentions = [];
-
+	
 	if (meId == null) {
+		note.cw = null;
+		note.fileIds = [];
+		note.files = [];
+		note.mentions = [];
 		note.text = '(Unauthorized)';
 	}
 
