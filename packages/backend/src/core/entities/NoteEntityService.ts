@@ -13,6 +13,7 @@ import type { MiUser } from '@/models/User.js';
 import type { MiNote } from '@/models/Note.js';
 import type { UsersRepository, NotesRepository, FollowingsRepository, PollsRepository, PollVotesRepository, NoteReactionsRepository, ChannelsRepository, MiMeta, EventsRepository } from '@/models/_.js';
 import { bindThis } from '@/decorators.js';
+import { anonymizeUser } from '@/anonymize.js';
 import { DebounceLoader } from '@/misc/loader.js';
 import { IdService } from '@/core/IdService.js';
 import { ReactionsBufferingService } from '@/core/ReactionsBufferingService.js';
@@ -484,6 +485,10 @@ export class NoteEntityService implements OnModuleInit {
 			await this.hideNote(packed, meId);
 		}
 
+		if (packed.channel?.anonymous) {
+			anonymizeUser(packed, meId == null);
+		}
+
 		return packed;
 	}
 
@@ -568,7 +573,7 @@ export class NoteEntityService implements OnModuleInit {
 		const packedUsers = await this.userEntityService.packMany(users, me)
 			.then(users => new Map(users.map(u => [u.id, u])));
 
-		return await Promise.all(notes.map(n => this.pack(n, me, {
+		const packedNotes = await Promise.all(notes.map(n => this.pack(n, me, {
 			...options,
 			_hint_: {
 				bufferedReactions,
@@ -577,6 +582,12 @@ export class NoteEntityService implements OnModuleInit {
 				packedUsers,
 			},
 		})));
+
+		if (packedNotes.length > 0 && packedNotes[0].channel?.anonymous) {
+			packedNotes.forEach((packed) => anonymizeUser(packed, meId == null));
+		}
+
+		return packedNotes;
 	}
 
 	@bindThis
