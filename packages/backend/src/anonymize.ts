@@ -9,12 +9,12 @@ export function anonymizeNote(note: MiNote | any, maskingContents = false, meId:
 	}
 
 	note.user = anonymousUser();
-	note.userId = 'unknown';
+	note.userId = 'anonymous';
 	note.cw = null;
 	note.fileIds = [];
 	note.files = [];
-	note.replyUserId = note.replyUserId ? 'unknown' : null;
-	note.renoteUserId = note.replyUserId ? 'unknown' : null;
+	note.replyUserId = note.replyUserId ? 'anonymous' : null;
+	note.renoteUserId = note.replyUserId ? 'anonymous' : null;
 	note.mentions = [];
 
 	if (maskingContents) {
@@ -32,9 +32,9 @@ export function anonymizeNote(note: MiNote | any, maskingContents = false, meId:
 
 export function anonymousUser() {
 	return new MiUser({
-		id: 'unknown',
-		username: 'unknown',
-		usernameLower: 'unknown',
+		id: 'anonymous',
+		username: 'anonymous',
+		usernameLower: 'anonymous',
 		tags: [],
 		emojis: [],
 		avatarDecorations: [],
