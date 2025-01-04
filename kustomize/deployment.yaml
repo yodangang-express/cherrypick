@@ -4,6 +4,7 @@ metadata:
   name: cherrypick
   namespace: cherrypick
 spec:
+  revisionHistoryLimit: 1
   selector:
     matchLabels:
       name: cherrypick
