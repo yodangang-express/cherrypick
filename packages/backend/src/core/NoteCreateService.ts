@@ -59,6 +59,7 @@ import { trackPromise } from '@/misc/promise-tracker.js';
 import { IdentifiableError } from '@/misc/identifiable-error.js';
 import { CollapsedQueue } from '@/misc/collapsed-queue.js';
 import { CacheService } from '@/core/CacheService.js';
+import { anonymousUser } from '@/anonymize.js';
 
 type NotificationType = 'reply' | 'renote' | 'quote' | 'mention';
 
@@ -635,7 +636,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 			}
 
 			// Pack the note
-			const noteObj = await this.noteEntityService.pack(note, null, { skipHide: true, withReactionAndUserPairCache: true });
+			const noteObj = await this.noteEntityService.pack(note, user, { skipHide: true, withReactionAndUserPairCache: true });
 
 			this.globalEventService.publishNotesStream(noteObj);
 
@@ -879,6 +880,13 @@ export class NoteCreateService implements OnApplicationShutdown {
 		const r = this.redisForTimelines.pipeline();
 
 		if (note.channelId) {
+			note.channel = await this.channelsRepository.findOneByOrFail({ id: note.channelId });
+
+			if (note.channel.anonymous) {
+				note.userId = 'anonymous';
+				note.user = anonymousUser();
+			}
+
 			this.fanoutTimelineService.push(`channelTimeline:${note.channelId}`, note.id, this.config.perChannelMaxNoteCacheCount, r);
 
 			this.fanoutTimelineService.push(`userTimelineWithChannel:${user.id}`, note.id, note.userHost == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);

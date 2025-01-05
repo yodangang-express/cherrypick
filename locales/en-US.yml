@@ -3358,3 +3358,6 @@ _weather:
   humidity: "Humidity"
   pressure: "Pressure"
   precipitation: "Precipitation"
+_yodangang:
+  anonymousChannel: "Anonymous channel"
+  anonymousUsername: "Anonymous"

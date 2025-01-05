@@ -4619,6 +4619,7 @@ export type components = {
         color: string;
         isSensitive: boolean;
         allowRenoteToExternal: boolean;
+        anonymous: boolean;
         userId: string | null;
       }) | null;
       localOnly?: boolean;
@@ -5159,6 +5160,7 @@ export type components = {
       notesCount: number;
       isSensitive: boolean;
       allowRenoteToExternal: boolean;
+      anonymous: boolean;
       isFollowing?: boolean;
       isFavorited?: boolean;
       pinnedNotes?: components['schemas']['Note'][];
@@ -13194,6 +13196,7 @@ export type operations = {
           color?: string;
           isSensitive?: boolean | null;
           allowRenoteToExternal?: boolean | null;
+          anonymous?: boolean | null;
         };
       };
     };
@@ -13861,6 +13864,7 @@ export type operations = {
           color?: string;
           isSensitive?: boolean | null;
           allowRenoteToExternal?: boolean | null;
+          anonymous?: boolean | null;
         };
       };
     };
