@@ -21,6 +21,7 @@ import type { Config } from '@/config.js';
 import { UserListService } from '@/core/UserListService.js';
 import type { FilterUnionByProperty } from '@/types.js';
 import { trackPromise } from '@/misc/promise-tracker.js';
+import { anonymousUser } from '@/anonymize.js';
 
 @Injectable()
 export class NotificationService implements OnApplicationShutdown {
@@ -155,13 +156,22 @@ export class NotificationService implements OnApplicationShutdown {
 			...data,
 		} as any as FilterUnionByProperty<MiNotification, 'type', T>;
 
+		const packed = await this.notificationEntityService.pack(notification, notifieeId, {});
+
+		if (packed.note?.channel?.anonymous) {
+			notification.notifierId = 'anonymous';
+
+			if (notification.type === 'note') return notification;
+
+			packed.user = anonymousUser();
+			packed.userId = 'anonymous';
+		}
+
 		const redisIdPromise = this.redisClient.xadd(
 			`notificationTimeline:${notifieeId}`,
 			'MAXLEN', '~', this.config.perUserNotificationsMaxCount.toString(),
 			'*',
 			'data', JSON.stringify(notification));
-
-		const packed = await this.notificationEntityService.pack(notification, notifieeId, {});
 
 		if (packed == null) return null;
 

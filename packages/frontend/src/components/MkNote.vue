@@ -854,6 +854,12 @@ function emitUpdReaction(emoji: string, delta: number) {
 		emit('reaction', emoji);
 	}
 }
+
+if (note.value.channel?.anonymous && $i.id !== note.value.userId) {
+	note.value.userId = '';
+	note.value.user.id = '';
+	note.value.user.username = i18n.ts._yodangang.anonymousUsername;
+}
 </script>
 
 <style lang="scss" module>

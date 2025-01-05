@@ -3177,3 +3177,6 @@ _searchSite:
   otherDescription: "Use other search engine"
   query: "Query"
   queryDescription: "Input query scheme for search engine. For example, if https://www.google.com/search?q=test, input 'q'."
+_yodangang:
+  anonymousChannel: "Anonymous channel"
+  anonymousUsername: "Anonymous"
