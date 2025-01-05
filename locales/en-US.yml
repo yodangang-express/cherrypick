@@ -3332,3 +3332,6 @@ _keyboardShortCut:
     toggleLocalOnly: "Toggle Local Only"
     featureWarn: "This feature is available when enable settings in \"Settings - CherryPick\"."
     sendPost: "Post note"
+_yodangang:
+  anonymousChannel: "Anonymous channel"
+  anonymousUsername: "Anonymous"

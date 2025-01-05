@@ -13,6 +13,7 @@ import type { MiUser } from '@/models/User.js';
 import type { MiNote } from '@/models/Note.js';
 import type { UsersRepository, NotesRepository, FollowingsRepository, PollsRepository, PollVotesRepository, NoteReactionsRepository, ChannelsRepository, MiMeta, EventsRepository } from '@/models/_.js';
 import { bindThis } from '@/decorators.js';
+import { anonymizeNote } from '@/anonymize.js';
 import { DebounceLoader } from '@/misc/loader.js';
 import { IdService } from '@/core/IdService.js';
 import { ReactionsBufferingService } from '@/core/ReactionsBufferingService.js';
@@ -446,6 +447,7 @@ export class NoteEntityService implements OnModuleInit {
 				color: channel.color,
 				isSensitive: channel.isSensitive,
 				allowRenoteToExternal: channel.allowRenoteToExternal,
+				anonymous: channel.anonymous,
 				userId: channel.userId,
 			} : undefined,
 			mentions: note.mentions.length > 0 ? note.mentions : undefined,
@@ -486,6 +488,10 @@ export class NoteEntityService implements OnModuleInit {
 
 		if (!opts.skipHide) {
 			await this.hideNote(packed, meId);
+		}
+
+		if (packed.channel?.anonymous) {
+			return anonymizeNote(packed, meId);
 		}
 
 		return packed;

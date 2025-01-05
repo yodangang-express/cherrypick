@@ -4,6 +4,7 @@ metadata:
   name: cherrypick
   namespace: cherrypick-dev
 spec:
+  revisionHistoryLimit: 1
   selector:
     matchLabels:
       name: cherrypick
@@ -34,6 +35,11 @@ spec:
         env:
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /etc/gcp/creds.json
+          - name: MODERATORS
+            valueFrom:
+              secretKeyRef:
+                name: moderators
+                key: ids
         securityContext:
           privileged: true
           capabilities:
