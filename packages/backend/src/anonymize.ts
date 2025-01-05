@@ -17,7 +17,7 @@ export function anonymizeNote(note: MiNote | any, meId: string | null = '') {
 
 	note.replyUserId = note.replyUserId ? 'anonymous' : null;
 	note.renoteUserId = note.replyUserId ? 'anonymous' : null;
-	
+
 	if (meId == null) {
 		note.cw = null;
 		note.fileIds = [];

@@ -799,6 +799,12 @@ if (appearNote.value.reply && appearNote.value.reply.replyId && defaultStore.sta
 function showOnRemote() {
 	if (props.note.user.instance !== undefined) window.open(props.note.url ?? props.note.uri, '_blank', 'noopener');
 }
+
+if (note.value.channel?.anonymous && $i.id !== note.value.userId) {
+	note.value.userId = '';
+	note.value.user.id = '';
+	note.value.user.username = i18n.ts._yodangang.anonymousUsername;
+}
 </script>
 
 <style lang="scss" module>

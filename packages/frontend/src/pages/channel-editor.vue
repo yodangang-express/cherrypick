@@ -29,7 +29,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</MkSwitch>
 
 			<MkSwitch v-model="anonymous">
-				<template #label>Anonymous</template>
+				<template #label>{{ i18n.ts._yodangang.anonymousChannel }}</template>
 			</MkSwitch>
 
 			<div>

@@ -3192,3 +3192,6 @@ _searchSite:
   otherDescription: "검색 엔진을 직접 지정할 수 있어요."
   query: "검색 쿼리"
   queryDescription: "검색 엔진이 사용할 쿼리를 입력해 주세요. (예: https://www.google.com/search?q=test 의 경우 q를 입력)"
+_yodangang:
+  anonymousChannel: "익명 채널"
+  anonymousUsername: "익명의 유령"
