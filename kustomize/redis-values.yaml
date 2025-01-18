@@ -7,7 +7,7 @@ master:
     key: topology.kubernetes.io/location
     type: operator
 replica:
-  replicaCount: 4
+  replicaCount: 3
   podAffinityPreset: soft
   podAntiAffinityPreset: hard
   nodeAffinityPreset:
