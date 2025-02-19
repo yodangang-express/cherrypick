@@ -1,24 +1,17 @@
-FROM debian:bullseye-20241016-slim AS base
+FROM node:22.11.0-bookworm AS base
 
-RUN rm /var/lib/dpkg/info/libc-bin.* &&\
-    apt clean -y &&\
-    apt update -y &&\
-    apt install -y libc-bin \
-    git \
-    python3 \
-    make \
-    g++ \
+ENV COREPACK_DEFAULT_TO_LATEST=0
+
+RUN apt-get update &&\
+    apt-get install -yqq --no-install-recommends \
+    build-essential \
     ffmpeg \
+    tini \
     curl \
     libjemalloc-dev \
-    libjemalloc2 \
-    tini &&\
+    libjemalloc2 &&\
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so &&\
-    curl -SLO https://deb.nodesource.com/nsolid_setup_deb.sh &&\
-    chmod 500 nsolid_setup_deb.sh &&\
-    ./nsolid_setup_deb.sh 20 &&\
-    apt install -y nodejs &&\
-    npm i -g npm pnpm typescript vite @swc/cli typeorm
+    corepack enable
 
 RUN apt-get install -y lsb-release &&\
   echo "deb https://packages.cloud.google.com/apt gcsfuse-$(lsb_release -c -s) main" | tee /etc/apt/sources.list.d/gcsfuse.list &&\
@@ -30,6 +23,7 @@ RUN apt clean &&\
   rm -rf /var/lib/apt/lists
 
 FROM base AS builder
+ENV COREPACK_DEFAULT_TO_LATEST=0
 COPY . /cherrypick
 WORKDIR /cherrypick
 USER root
@@ -40,9 +34,11 @@ RUN git submodule update --init &&\
   pnpm build
 
 FROM base
+ENV COREPACK_DEFAULT_TO_LATEST=0
 WORKDIR /cherrypick
 USER root
-RUN mkdir -p /cherrypick/packages/backend &&\
+RUN corepack enable &&\
+  mkdir -p /cherrypick/packages/backend &&\
   mkdir -p /cherrypick/packages/frontend &&\
   mkdir -p /cherrypick/packages/cherrypick-js &&\
   mkdir -p /cherrypick/packages/misskey-reversi &&\
@@ -71,9 +67,11 @@ COPY --from=builder /cherrypick/packages/misskey-bubble-game/package.json /cherr
 COPY --from=builder /cherrypick/packages/misskey-bubble-game/built /cherrypick/packages/misskey-bubble-game/built
 COPY --from=builder /cherrypick/packages/misskey-bubble-game/node_modules /cherrypick/packages/misskey-bubble-game/node_modules
 COPY --from=builder /cherrypick/fluent-emojis /cherrypick/fluent-emojis
+RUN corepack install
 ENV LD_PRELOAD=/usr/local/lib/libjemalloc.so
+ENV MALLOC_CONF=background_thread:true,metadata_thp:auto,dirty_decay_ms:30000,muzzy_decay_ms:30000
 ENV NODE_ENV=production
 HEALTHCHECK --interval=5s --retries=20 CMD ["/bin/bash", "/cherrypick/healthcheck.sh"]
 ENTRYPOINT ["/usr/bin/tini", "--"]
 EXPOSE 3000
-CMD pnpm run migrateandstart
+CMD pnpm run migrateandstart:docker
