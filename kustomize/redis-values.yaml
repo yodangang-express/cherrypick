@@ -1,6 +1,10 @@
 auth:
   password: abcd
+master:
+  resourcesPreset: small
 replica:
   replicaCount: 2
+  resourcesPreset: small
 sentinel:
   enabled: true
+  resourcesPreset: small
