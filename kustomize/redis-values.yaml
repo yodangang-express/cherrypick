@@ -1,6 +1,6 @@
 auth:
   password: abcd
 replica:
-  replicaCount: 3
+  replicaCount: 2
 sentinel:
   enabled: true
