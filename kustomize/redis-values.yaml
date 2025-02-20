@@ -3,7 +3,7 @@ auth:
 master:
   resourcesPreset: small
 replica:
-  replicaCount: 2
+  replicaCount: 3
   resourcesPreset: small
 sentinel:
   enabled: true
