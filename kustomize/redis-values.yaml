@@ -8,3 +8,7 @@ replica:
 sentinel:
   enabled: true
   resourcesPreset: small
+  readinessProbe:
+    enabled: false
+  livenessProbe:
+    enabled: false
