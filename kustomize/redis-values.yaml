@@ -2,18 +2,18 @@ auth:
   password: abcd
 master:
   resourcesPreset: small
-replica:
-  replicaCount: 3
-  resourcesPreset: small
-sentinel:
-  enabled: true
-  resourcesPreset: small
-  readinessProbe:
-    enabled: false
-  livenessProbe:
-    enabled: false
-commonConfiguration: |-
-   # Enable AOF https://redis.io/topics/persistence#append-only-file
-   appendonly no
-   # Disable RDB persistence, AOF persistence already enabled.
-   save ""
+# replica:
+#   replicaCount: 3
+#   resourcesPreset: small
+# sentinel:
+#   enabled: true
+#   resourcesPreset: small
+#   readinessProbe:
+#     enabled: false
+#   livenessProbe:
+#     enabled: false
+# commonConfiguration: |-
+#    # Enable AOF https://redis.io/topics/persistence#append-only-file
+#    appendonly no
+#    # Disable RDB persistence, AOF persistence already enabled.
+#    save ""
