@@ -33,8 +33,6 @@ spec:
             containerPort: 3000
             protocol: TCP
         env:
-          - name: GOOGLE_APPLICATION_CREDENTIALS
-            value: /etc/gcp/creds.json
           - name: MODERATORS
             valueFrom:
               secretKeyRef:
