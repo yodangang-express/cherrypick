@@ -17,6 +17,13 @@ spec:
       - host all postgres all trust
   primaryUpdateStrategy: unsupervised
   enableSuperuserAccess: true
+  resources:
+    requests:
+      cpu: 1
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 2Gi
   bootstrap:
     initdb:
       database: cherrypick
@@ -58,7 +65,7 @@ metadata:
   name: cnpg-backup
   namespace: cherrypick
 spec:
-  schedule: "0 0 19 * * *"
+  schedule: "0 0 2 * * *"
   backupOwnerReference: self
   cluster:
     name: cnpg
