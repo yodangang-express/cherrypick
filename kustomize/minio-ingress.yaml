@@ -1,0 +1,82 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: minio
+  namespace: minio
+spec:
+  acme:
+    email: juuni.ni.i@gmail.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: minio-acme-account-key
+    solvers:
+      - http01:
+          ingress:
+            serviceType: ClusterIP
+            ingressClassName: traefik
+
+---
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: minio
+  namespace: minio
+spec:
+  commonName: static.yodangang.express
+  secretName: minio-cert-tls
+  dnsNames:
+    - static.yodangang.express
+  issuerRef:
+    kind: Issuer
+    name: minio
+
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: https-redirectscheme
+  namespace: minio
+spec:
+  redirectScheme:
+    permanent: true
+    scheme: https
+
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: minio
+  namespace: minio
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`static.yodangang.express`)
+      kind: Rule
+      services:
+        - name: minio
+          port: 80
+  tls:
+    secretName: minio-cert-tls
+
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: minio-redirect
+  namespace: minio
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`static.yodangang.express`)
+      kind: Rule
+      services:
+        - name: minio
+          port: 80
+      middlewares:
+        - name: https-redirectscheme
