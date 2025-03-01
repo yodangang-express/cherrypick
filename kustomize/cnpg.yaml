@@ -7,7 +7,7 @@ metadata:
   namespace: cherrypick
 spec:
   imageName: ghcr.io/cloudnative-pg/postgresql:17.2-17
-  instances: 3
+  instances: 2
   storage:
     size: 60Gi
   postgresql:
@@ -19,10 +19,10 @@ spec:
   enableSuperuserAccess: true
   resources:
     requests:
-      cpu: 1
+      cpu: '1'
       memory: 1Gi
     limits:
-      cpu: 2
+      cpu: '2'
       memory: 2Gi
   bootstrap:
     initdb:
