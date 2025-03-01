@@ -56,6 +56,16 @@ spec:
           key: creds
       data:
         compression: gzip
+  externalClusters:
+  - name: restore
+    barmanObjectStore:
+      destinationPath: gs://yodangang-express-backup/
+      googleCredentials:
+        applicationCredentials:
+          name: gcloud
+          key: creds
+      data:
+        compression: gzip
 
 ---
 
