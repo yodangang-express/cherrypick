@@ -25,9 +25,6 @@ spec:
             memory: "4Gi"
             cpu: "2"
         volumeMounts:
-        - name: creds
-          mountPath: /etc/gcp
-          readOnly: true
         - name: config
           mountPath: /cherrypick/.config
           readOnly: true
@@ -36,8 +33,6 @@ spec:
             containerPort: 3000
             protocol: TCP
         env:
-          - name: GOOGLE_APPLICATION_CREDENTIALS
-            value: /etc/gcp/creds.json
           - name: MODERATORS
             valueFrom:
               secretKeyRef:
@@ -72,13 +67,6 @@ spec:
           periodSeconds: 10
           failureThreshold: 3
           timeoutSeconds: 1
-        lifecycle:
-          postStart:
-            exec:
-              command: ["gcsfuse", "-o", "allow_other", "yodangang-express", "/cherrypick/files"]
-          preStop:
-            exec:
-              command: ["fusermount", "-u", "/cherrypick/files"]
       topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: topology.kubernetes.io/location
@@ -87,12 +75,6 @@ spec:
           matchLabels:
             name: cherrypick
       volumes:
-        - name: creds
-          secret:
-            secretName: gcloud
-            items:
-            - key: creds
-              path: creds.json
         - name: config
           secret:
             secretName: cherrypick
