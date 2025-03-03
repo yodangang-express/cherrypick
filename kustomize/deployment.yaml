@@ -44,25 +44,28 @@ spec:
             add:
               - SYS_ADMIN
         livenessProbe:
-          httpGet:
-            path: /.well-known/nodeinfo
-            port: 3000
+          exec:
+            command:
+            - "/bin/bash"
+            - "/cherrypick/healthcheck.sh"
           initialDelaySeconds: 60
           periodSeconds: 10
           failureThreshold: 3
           timeoutSeconds: 1
         readinessProbe:
-          httpGet:
-            path: /.well-known/nodeinfo
-            port: 3000
+          exec:
+            command:
+            - /bin/bash
+            - /cherrypick/healthcheck.sh
           initialDelaySeconds: 60
           periodSeconds: 10
           failureThreshold: 3
           timeoutSeconds: 1
         startupProbe:
-          httpGet:
-            path: /.well-known/nodeinfo
-            port: 3000
+          exec:
+            command:
+            - /bin/bash
+            - /cherrypick/healthcheck.sh
           initialDelaySeconds: 60
           periodSeconds: 10
           failureThreshold: 3
