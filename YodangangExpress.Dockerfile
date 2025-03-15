@@ -1,3 +1,5 @@
+# docker buildx build --platform linux/amd64,linux/arm64 -f YodangangExpress.Dockerfile -t docker.io/juunini/cherrypick:dev --push .
+
 FROM node:22.11.0-bookworm AS base
 
 ENV COREPACK_DEFAULT_TO_LATEST=0
@@ -12,12 +14,6 @@ RUN apt-get update &&\
     libjemalloc2 &&\
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so &&\
     corepack enable
-
-RUN apt-get install -y lsb-release &&\
-  echo "deb https://packages.cloud.google.com/apt gcsfuse-$(lsb_release -c -s) main" | tee /etc/apt/sources.list.d/gcsfuse.list &&\
-  curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - &&\
-  apt-get update -y &&\
-  apt-get install -y fuse gcsfuse
 
 RUN apt clean &&\
   rm -rf /var/lib/apt/lists
