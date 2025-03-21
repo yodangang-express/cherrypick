@@ -70,6 +70,7 @@ spec:
           periodSeconds: 10
           failureThreshold: 3
           timeoutSeconds: 1
+      restartPolicy: Always
       topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: topology.kubernetes.io/location

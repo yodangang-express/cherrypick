@@ -12,18 +12,28 @@ spec:
       labels:
         name: redis
     spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: redis
-                operator: In
-                values:
-                  - "true"
+      initContainers:
+      - name: init
+        image: juunini/gsutil:latest
+        command:
+        - /google/google-cloud-sdk/bin/gsutil
+        - -o
+        - Credentials:gs_service_key_file=/creds/creds.json
+        - -o
+        - GSUtil:default_project_id=yodangang-express-backup
+        - -m
+        - cp
+        - gs://yodangang-express-backup/dump.rdb
+        - /data/dump.rdb
+        volumeMounts:
+        - name: creds
+          mountPath: /creds
+          readOnly: true
+        - name: data
+          mountPath: /data
       containers:
       - name: redis
-        image: redis:7.2.4-alpine3.19
+        image: redis:7.4.1-alpine3.20
         resources:
           requests:
             memory: "1Gi"
@@ -34,12 +44,14 @@ spec:
         ports:
           - containerPort: 6379
         volumeMounts:
-          - mountPath: /data
-            name: redis
+        - name: data
+          mountPath: /data
       volumes:
-      - name: redis
-        persistentVolumeClaim:
-          claimName: redis-pvc
+      - name: creds
+        secret:
+          secretName: gcloud
+      - name: data
+        emptyDir: {}
 
 ---
 
