@@ -1,6 +1,6 @@
 # docker buildx build --platform linux/amd64,linux/arm64 -f YodangangExpress.Dockerfile -t docker.io/juunini/cherrypick:dev --push .
 
-FROM node:22.11.0-bookworm AS base
+FROM node:24.14.1-trixie AS base
 
 ENV COREPACK_DEFAULT_TO_LATEST=0
 
