@@ -59,7 +59,6 @@ import { IdentifiableError } from '@/misc/identifiable-error.js';
 import { CollapsedQueue } from '@/misc/collapsed-queue.js';
 import { CacheService } from '@/core/CacheService.js';
 import { isQuote, isRenote } from '@/misc/is-renote.js';
-import { anonymousUser } from '@/anonymize.js';
 
 type NotificationType = 'reply' | 'renote' | 'quote' | 'mention';
 
@@ -587,8 +586,9 @@ export class NoteCreateService implements OnApplicationShutdown {
 
 		const note = await this.insertNote(user, data, tags, emojis, mentionedUsers);
 
+		const isAnonymous = data.channel != null && data.channel.anonymous == true;
 		setImmediate('post created', { signal: this.#shutdownController.signal }).then(
-			() => this.postNoteCreated(note, user, data, silent, tags!, mentionedUsers!),
+			() => this.postNoteCreated(note, user, data, silent, tags!, mentionedUsers!, isAnonymous),
 			() => { /* aborted, ignore this */ },
 		);
 
@@ -724,7 +724,8 @@ export class NoteCreateService implements OnApplicationShutdown {
 		username: MiUser['username'];
 		host: MiUser['host'];
 		isBot: MiUser['isBot'];
-	}, data: Option, silent: boolean, tags: string[], mentionedUsers: MinimumUser[]) {
+	}, data: Option, silent: boolean, tags: string[], mentionedUsers: MinimumUser[], isAnonymous: boolean) {
+		if (!isAnonymous) {  // IF NOT ANONYMOUS
 		this.notesChart.update(note, true);
 		if (note.visibility !== 'specified' && (this.meta.enableChartsForRemoteUser || (user.host == null))) {
 			this.perUserNotesChart.update(user, note, true);
@@ -747,17 +748,8 @@ export class NoteCreateService implements OnApplicationShutdown {
 			this.hashtagService.updateHashtags(user, tags);
 		}
 
-		if (note.channelId) {
-			note.channel = await this.channelsRepository.findOneByOrFail({ id: note.channelId });
-			if (note.channel.anonymous) {
-				note.userId = 'anonymous';
-				note.user = anonymousUser();
-				return;
-			}
-		}
-
 		// Increment notes count (user)
-   	this.incNotesCountOfUser(user);
+		this.incNotesCountOfUser(user);
 
 		this.pushToTl(note, user);
 
@@ -765,6 +757,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 			...note,
 			channel: data.channel ?? null,
 		}, user);
+		}  // IF NOT ANONYMOUS
 
 		if (data.reply) {
 			this.saveReply(data.reply, note);
@@ -817,16 +810,20 @@ export class NoteCreateService implements OnApplicationShutdown {
 		}
 
 		if (!silent) {
+		  if (!isAnonymous) {  // IF NOT ANONYMOUS
 			if (this.userEntityService.isLocalUser(user)) this.activeUsersChart.write(user);
+		  }  // IF NOT ANONYMOUS
 
 			// Pack the note
-			const noteObj = await this.noteEntityService.pack(note, user, { skipHide: true, withReactionAndUserPairCache: true });
+			const noteObj = await this.noteEntityService.pack(note, null, { skipHide: true, withReactionAndUserPairCache: true });
 
+		  if (!isAnonymous) {  // IF NOT ANONYMOUS
 			this.globalEventService.publishNotesStream(noteObj);
 
 			this.roleService.addNoteToRoleTimeline(noteObj);
 
 			this.webhookService.enqueueUserWebhook(user.id, 'note', { note: noteObj });
+		  }  // IF NOT ANONYMOUS
 
 			const nm = new NotificationManager(this.mutingsRepository, this.notificationService, user, note);
 
@@ -845,8 +842,10 @@ export class NoteCreateService implements OnApplicationShutdown {
 
 					if (!isThreadMuted) {
 						nm.push(data.reply.userId, 'reply');
+		        if (!isAnonymous) {  // IF NOT ANONYMOUS
 						this.globalEventService.publishMainStream(data.reply.userId, 'reply', noteObj);
 						this.webhookService.enqueueUserWebhook(data.reply.userId, 'reply', { note: noteObj });
+		        }  // IF NOT ANONYMOUS
 					}
 				}
 			}
@@ -860,14 +859,21 @@ export class NoteCreateService implements OnApplicationShutdown {
 					nm.push(data.renote.userId, type);
 				}
 
+		    if (!isAnonymous) {  // IF NOT ANONYMOUS
 				// Publish event
 				if ((user.id !== data.renote.userId) && data.renote.userHost === null) {
 					this.globalEventService.publishMainStream(data.renote.userId, 'renote', noteObj);
 					this.webhookService.enqueueUserWebhook(data.renote.userId, 'renote', { note: noteObj });
 				}
+		    }  // IF NOT ANONYMOUS
 			}
 
 			nm.notify();
+
+	    if (isAnonymous) {
+				return;
+			}
+			// IF NOT ANONYMOUS
 
 			//#region AP deliver
 			if (!data.localOnly && this.userEntityService.isLocalUser(user)) {

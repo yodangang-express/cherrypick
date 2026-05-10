@@ -21,6 +21,7 @@ import type { OnModuleInit } from '@nestjs/common';
 import type { UserEntityService } from './UserEntityService.js';
 import type { NoteEntityService } from './NoteEntityService.js';
 import type { UserGroupInvitationEntityService } from './UserGroupInvitationEntityService.js';
+import { anonymousUser } from '@/anonymize.js';
 
 const NOTE_REQUIRED_NOTIFICATION_TYPES = new Set([
 	'note',
@@ -92,18 +93,21 @@ export class NotificationEntityService implements OnModuleInit {
 		const noteIfNeed = needsNote ? (
 			hint?.packedNotes != null
 				? hint.packedNotes.get(notification.noteId)
-				: this.noteEntityService.pack(notification.noteId, { id: meId }, {
+				: await this.noteEntityService.pack(notification.noteId, { id: meId }, {
 					detail: true,
 				})
 		) : undefined;
 		// if the note has been deleted, don't show this notification
 		if (needsNote && !noteIfNeed) return null;
+		const isAnonymous = noteIfNeed != null && noteIfNeed.channel?.anonymous;
+		const packedAnonymousUser = await this.userEntityService.pack(anonymousUser());
 
 		const needsUser = 'notifierId' in notification;
 		const userIfNeed = needsUser ? (
-			hint?.packedUsers != null
+			isAnonymous ? packedAnonymousUser :
+			(hint?.packedUsers != null
 				? hint.packedUsers.get(notification.notifierId)
-				: this.userEntityService.pack(notification.notifierId, { id: meId })
+				: this.userEntityService.pack(notification.notifierId, { id: meId }))
 		) : undefined;
 		// if the user has been deleted, don't show this notification
 		if (needsUser && !userIfNeed) return null;
@@ -111,9 +115,9 @@ export class NotificationEntityService implements OnModuleInit {
 		//#region Grouped notifications
 		if (notification.type === 'reaction:grouped') {
 			const reactions = (await Promise.all(notification.reactions.map(async reaction => {
-				const user = hint?.packedUsers != null
+				const user = isAnonymous ? packedAnonymousUser : (hint?.packedUsers != null
 					? hint.packedUsers.get(reaction.userId)!
-					: await this.userEntityService.pack(reaction.userId, { id: meId });
+					: await this.userEntityService.pack(reaction.userId, { id: meId }));
 				return {
 					user,
 					reaction: reaction.reaction,
@@ -133,12 +137,12 @@ export class NotificationEntityService implements OnModuleInit {
 			});
 		} else if (notification.type === 'renote:grouped') {
 			const users = (await Promise.all(notification.userIds.map(userId => {
-				const packedUser = hint?.packedUsers != null ? hint.packedUsers.get(userId) : null;
+				const packedUser = isAnonymous ? packedAnonymousUser : (hint?.packedUsers != null ? hint.packedUsers.get(userId) : null);
 				if (packedUser) {
 					return packedUser;
 				}
 
-				return this.userEntityService.pack(userId, { id: meId });
+				return isAnonymous ? packedAnonymousUser : this.userEntityService.pack(userId, { id: meId });
 			}))).filter(x => x != null);
 			// if all users have been deleted, don't show this notification
 			if (users.length === 0) {
@@ -154,12 +158,12 @@ export class NotificationEntityService implements OnModuleInit {
 			});
 		} else if (notification.type === 'note:grouped') {
 			const users = (await Promise.all(notification.notifierIds.map(notifier => {
-				const packedUser = hint?.packedUsers != null ? hint.packedUsers.get(notifier) : null;
+				const packedUser = isAnonymous ? packedAnonymousUser : (hint?.packedUsers != null ? hint.packedUsers.get(notifier) : null);
 				if (packedUser) {
 					return packedUser;
 				}
 
-				return this.userEntityService.pack(notifier, { id: meId });
+				return isAnonymous ? packedAnonymousUser : this.userEntityService.pack(notifier, { id: meId });
 			}))).filter(x => x != null);
 			// if all users have been deleted, don't show this notification
 			if (users.length === 0) {
@@ -194,7 +198,7 @@ export class NotificationEntityService implements OnModuleInit {
 			id: notification.id,
 			createdAt: new Date(notification.createdAt).toISOString(),
 			type: notification.type,
-			userId: 'notifierId' in notification ? notification.notifierId : undefined,
+			userId: 'notifierId' in notification ? (isAnonymous ? packedAnonymousUser.id :notification.notifierId) : undefined,
 			...(userIfNeed != null ? { user: userIfNeed } : {}),
 			...(noteIfNeed != null ? { note: noteIfNeed } : {}),
 			...(notification.type === 'reaction' ? {

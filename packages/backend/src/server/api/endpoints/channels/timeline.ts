@@ -9,7 +9,6 @@ import type { ChannelsRepository, MiMeta, NotesRepository } from '@/models/_.js'
 import { QueryService } from '@/core/QueryService.js';
 import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
 import ActiveUsersChart from '@/core/chart/charts/active-users.js';
-import { FanoutTimelineName } from '@/core/FanoutTimelineService.js';
 import { DI } from '@/di-symbols.js';
 import { IdService } from '@/core/IdService.js';
 import { FanoutTimelineEndpointService } from '@/core/FanoutTimelineEndpointService.js';
@@ -90,13 +89,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				return await this.noteEntityService.packMany(await this.getFromDb({ untilId, sinceId, limit: ps.limit, channelId: channel.id }, me), me);
 			}
 
-			let redisTimelines: FanoutTimelineName[] = [`channelTimeline:${channel.id}`];
-			if (channel.anonymous) {
-				// Effectively disables FTT on anonymous channels.
-				// Force entities to be always fetched from DB, skipping all cacheServices that potentially leak author info.
-				redisTimelines = [];
-			}
-
 			return await this.fanoutTimelineEndpointService.timeline({
 				untilId,
 				sinceId,
@@ -104,7 +96,9 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				allowPartial: ps.allowPartial,
 				me,
 				useDbFallback: true,
-				redisTimelines,
+				// Effectively disables FTT on anonymous channels.
+				// Force entities to be always fetched from DB, skipping all cacheServices that potentially leak author info.
+				redisTimelines: channel.anonymous? [] : [`channelTimeline:${channel.id}`],
 				excludePureRenotes: false,
 				withCats: false,
 				dbFallback: async (untilId, sinceId, limit) => {

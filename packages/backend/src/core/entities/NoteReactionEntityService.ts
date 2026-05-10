@@ -5,19 +5,19 @@
 
 import { Inject, Injectable } from '@nestjs/common';
 import { DI } from '@/di-symbols.js';
-import type { NoteReactionsRepository, ChannelsRepository } from '@/models/_.js';
+import type { NoteReactionsRepository } from '@/models/_.js';
 import type { Packed } from '@/misc/json-schema.js';
 import { bindThis } from '@/decorators.js';
 import { IdService } from '@/core/IdService.js';
-import { anonymousUser } from '@/anonymize.js';
-import type { MiNoteReaction } from '@/models/NoteReaction.js';
-import type { MiUser } from '@/models/User.js';
 import type { OnModuleInit } from '@nestjs/common';
 import type { } from '@/models/Blocking.js';
+import type { MiUser } from '@/models/User.js';
+import type { MiNoteReaction } from '@/models/NoteReaction.js';
 import type { ReactionService } from '../ReactionService.js';
 import type { UserEntityService } from './UserEntityService.js';
 import type { NoteEntityService } from './NoteEntityService.js';
 import { ModuleRef } from '@nestjs/core';
+import { anonymousUser } from '@/anonymize.js';
 
 @Injectable()
 export class NoteReactionEntityService implements OnModuleInit {
@@ -31,9 +31,6 @@ export class NoteReactionEntityService implements OnModuleInit {
 
 		@Inject(DI.noteReactionsRepository)
 		private noteReactionsRepository: NoteReactionsRepository,
-
-		@Inject(DI.channelsRepository)
-		private channelsRepository: ChannelsRepository,
 
 		//private userEntityService: UserEntityService,
 		//private noteEntityService: NoteEntityService,
@@ -57,17 +54,19 @@ export class NoteReactionEntityService implements OnModuleInit {
 		hints?: {
 			packedUser?: Packed<'UserLite'>
 		},
-		anonymous?: boolean,
 	): Promise<Packed<'NoteReaction'>> {
 		const opts = Object.assign({
 		}, options);
 
 		const reaction = typeof src === 'object' ? src : await this.noteReactionsRepository.findOneByOrFail({ id: src });
+		const note = await this.noteEntityService.pack(reaction.note ?? reaction.noteId, me);
+		const packedAnonymousUser = await this.userEntityService.pack(anonymousUser());
+		const isAnonymous = note.userId == packedAnonymousUser.id;
 
 		return {
 			id: reaction.id,
 			createdAt: this.idService.parse(reaction.id).date.toISOString(),
-			user: anonymous ? anonymousUser() : hints?.packedUser ?? await this.userEntityService.pack(reaction.user ?? reaction.userId, me),
+			user: isAnonymous ? packedAnonymousUser : (hints?.packedUser ?? await this.userEntityService.pack(reaction.user ?? reaction.userId, me)),
 			type: this.reactionService.convertLegacyReaction(reaction.reaction),
 		};
 	}
@@ -83,17 +82,7 @@ export class NoteReactionEntityService implements OnModuleInit {
 		const _users = reactions.map(({ user, userId }) => user ?? userId);
 		const _userMap = await this.userEntityService.packMany(_users, me)
 			.then(users => new Map(users.map(u => [u.id, u])));
-		const anonymous = await this.isAnonymousChannel(reactions);
-		return Promise.all(reactions.map(reaction => this.pack(reaction, me, opts, { packedUser: _userMap.get(reaction.userId) }, anonymous)));
-	}
-
-	private async isAnonymousChannel(reactions: MiNoteReaction[]): Promise<boolean> {
-		if (reactions.length > 0 && reactions[0].note?.channelId) {
-			const channel = await this.channelsRepository.findOneByOrFail({ id: reactions[0].note.channelId });
-			return channel.anonymous;
-		}
-
-		return false;
+		return Promise.all(reactions.map(reaction => this.pack(reaction, me, opts, { packedUser: _userMap.get(reaction.userId) })));
 	}
 
 	@bindThis
@@ -109,13 +98,16 @@ export class NoteReactionEntityService implements OnModuleInit {
 		}, options);
 
 		const reaction = typeof src === 'object' ? src : await this.noteReactionsRepository.findOneByOrFail({ id: src });
+		const note = await this.noteEntityService.pack(reaction.note ?? reaction.noteId, me);
+		const packedAnonymousUser = await this.userEntityService.pack(anonymousUser());
+		const isAnonymous = note.userId == packedAnonymousUser.id;
 
 		return {
 			id: reaction.id,
 			createdAt: this.idService.parse(reaction.id).date.toISOString(),
-			user: hints?.packedUser ?? await this.userEntityService.pack(reaction.user ?? reaction.userId, me),
+			user: isAnonymous ? packedAnonymousUser : (hints?.packedUser ?? await this.userEntityService.pack(reaction.user ?? reaction.userId, me)),
 			type: this.reactionService.convertLegacyReaction(reaction.reaction),
-			note: await this.noteEntityService.pack(reaction.note ?? reaction.noteId, me),
+			note,
 		};
 	}
 

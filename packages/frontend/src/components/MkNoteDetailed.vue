@@ -959,12 +959,6 @@ function loadHistories() {
 		histories.value = histories.value.concat(res);
 	});
 }
-
-if (note.value.channel?.anonymous && $i.id !== note.value.userId) {
-	note.value.userId = '';
-	note.value.user.id = '';
-	note.value.user.username = i18n.ts._yodangang.anonymousUsername;
-}
 </script>
 
 <style lang="scss" module>

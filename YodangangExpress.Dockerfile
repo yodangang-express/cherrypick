@@ -1,73 +1,114 @@
+# syntax = docker/dockerfile:1.4
+
 # docker buildx build --platform linux/amd64,linux/arm64 -f YodangangExpress.Dockerfile -t docker.io/juunini/cherrypick:dev --push .
 
-FROM node:24.14.1-trixie AS base
+ARG NODE_VERSION=24.15.0-bookworm
 
-ENV COREPACK_DEFAULT_TO_LATEST=0
+# build assets & compile TypeScript
 
-RUN apt-get update &&\
-    apt-get install -yqq --no-install-recommends \
-    build-essential \
-    ffmpeg \
-    tini \
-    curl \
-    libjemalloc-dev \
-    libjemalloc2 &&\
-    ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so &&\
-    npm install --global corepack@latest && corepack enable
+FROM --platform=$BUILDPLATFORM node:${NODE_VERSION} AS native-builder
 
-RUN apt clean &&\
-  rm -rf /var/lib/apt/lists
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+	--mount=type=cache,target=/var/lib/apt,sharing=locked \
+	rm -f /etc/apt/apt.conf.d/docker-clean \
+	; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache \
+	&& apt-get update \
+	&& apt-get install -yqq --no-install-recommends \
+	build-essential
 
-FROM base AS builder
-ENV COREPACK_DEFAULT_TO_LATEST=0
-COPY . /cherrypick
 WORKDIR /cherrypick
-USER root
-ENV NODE_ENV=production
-RUN git submodule update --init &&\
-  corepack enable &&\
-  pnpm install &&\
-  pnpm build
 
-FROM base
-ENV COREPACK_DEFAULT_TO_LATEST=0
+COPY --link ["pnpm-lock.yaml", "pnpm-workspace.yaml", "package.json", "./"]
+COPY --link ["scripts", "./scripts"]
+COPY --link ["patches", "./patches"]
+COPY --link ["packages/backend/package.json", "./packages/backend/"]
+COPY --link ["packages/frontend-shared/package.json", "./packages/frontend-shared/"]
+COPY --link ["packages/frontend/package.json", "./packages/frontend/"]
+COPY --link ["packages/frontend-embed/package.json", "./packages/frontend-embed/"]
+COPY --link ["packages/frontend-builder/package.json", "./packages/frontend-builder/"]
+COPY --link ["packages/icons-subsetter/package.json", "./packages/icons-subsetter/"]
+COPY --link ["packages/sw/package.json", "./packages/sw/"]
+COPY --link ["packages/cherrypick-js/package.json", "./packages/cherrypick-js/"]
+COPY --link ["packages/misskey-reversi/package.json", "./packages/misskey-reversi/"]
+COPY --link ["packages/misskey-bubble-game/package.json", "./packages/misskey-bubble-game/"]
+
+ARG NODE_ENV=production
+
+RUN node -e "console.log(JSON.parse(require('node:fs').readFileSync('./package.json')).packageManager)" | xargs npm install -g
+
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store,sharing=locked \
+	pnpm i --frozen-lockfile --aggregate-output
+
+COPY --link . ./
+
+RUN git submodule update --init
+RUN pnpm build
+RUN rm -rf .git/
+
+# build native dependencies for target platform
+
+FROM --platform=$TARGETPLATFORM node:${NODE_VERSION} AS target-builder
+
+RUN apt-get update \
+	&& apt-get install -yqq --no-install-recommends \
+	build-essential
+
 WORKDIR /cherrypick
-USER root
-RUN corepack enable &&\
-  mkdir -p /cherrypick/packages/backend &&\
-  mkdir -p /cherrypick/packages/frontend &&\
-  mkdir -p /cherrypick/packages/cherrypick-js &&\
-  mkdir -p /cherrypick/packages/misskey-reversi &&\
-  mkdir -p /cherrypick/.config &&\
-  mkdir -p /cherrypick/files
-COPY --from=builder /cherrypick/built /cherrypick/built
-COPY --from=builder /cherrypick/package.json /cherrypick/package.json
-COPY --from=builder /cherrypick/pnpm-workspace.yaml /cherrypick/pnpm-workspace.yaml
-COPY --from=builder /cherrypick/healthcheck.sh /cherrypick/healthcheck.sh
-COPY --chown=root:root --from=builder /cherrypick/node_modules /cherrypick/node_modules
-COPY --from=builder /cherrypick/packages/backend/package.json /cherrypick/packages/backend/package.json
-COPY --from=builder /cherrypick/packages/backend/scripts/check_connect.js /cherrypick/packages/backend/scripts/check_connect.js
-COPY --from=builder /cherrypick/packages/backend/ormconfig.js /cherrypick/packages/backend/ormconfig.js
-COPY --from=builder /cherrypick/packages/backend/node_modules /cherrypick/packages/backend/node_modules
-COPY --from=builder /cherrypick/packages/backend/built /cherrypick/packages/backend/built
-COPY --from=builder /cherrypick/packages/backend/assets /cherrypick/packages/backend/assets
-COPY --from=builder /cherrypick/packages/backend/migration /cherrypick/packages/backend/migration
-COPY --from=builder /cherrypick/packages/frontend/assets /cherrypick/packages/frontend/assets
-COPY --from=builder /cherrypick/packages/cherrypick-js/package.json /cherrypick/packages/cherrypick-js/package.json
-COPY --from=builder /cherrypick/packages/cherrypick-js/built /cherrypick/packages/cherrypick-js/built
-COPY --from=builder /cherrypick/packages/cherrypick-js/node_modules /cherrypick/packages/cherrypick-js/node_modules
-COPY --from=builder /cherrypick/packages/misskey-reversi/package.json /cherrypick/packages/misskey-reversi/package.json
-COPY --from=builder /cherrypick/packages/misskey-reversi/built /cherrypick/packages/misskey-reversi/built
-COPY --from=builder /cherrypick/packages/misskey-reversi/node_modules /cherrypick/packages/misskey-reversi/node_modules
-COPY --from=builder /cherrypick/packages/misskey-bubble-game/package.json /cherrypick/packages/misskey-bubble-game/package.json
-COPY --from=builder /cherrypick/packages/misskey-bubble-game/built /cherrypick/packages/misskey-bubble-game/built
-COPY --from=builder /cherrypick/packages/misskey-bubble-game/node_modules /cherrypick/packages/misskey-bubble-game/node_modules
-COPY --from=builder /cherrypick/fluent-emojis /cherrypick/fluent-emojis
-RUN corepack install
+
+COPY --link ["pnpm-lock.yaml", "pnpm-workspace.yaml", "package.json", "./"]
+COPY --link ["scripts", "./scripts"]
+COPY --link ["patches", "./patches"]
+COPY --link ["packages/backend/package.json", "./packages/backend/"]
+COPY --link ["packages/cherrypick-js/package.json", "./packages/cherrypick-js/"]
+COPY --link ["packages/misskey-reversi/package.json", "./packages/misskey-reversi/"]
+COPY --link ["packages/misskey-bubble-game/package.json", "./packages/misskey-bubble-game/"]
+
+ARG NODE_ENV=production
+
+RUN node -e "console.log(JSON.parse(require('node:fs').readFileSync('./package.json')).packageManager)" | xargs npm install -g
+
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store,sharing=locked \
+	pnpm i --frozen-lockfile --aggregate-output
+
+FROM --platform=$TARGETPLATFORM node:${NODE_VERSION}-slim AS runner
+
+ARG UID="991"
+ARG GID="991"
+
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+	ffmpeg tini curl libjemalloc-dev libjemalloc2 \
+	&& ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so \
+	&& groupadd -g "${GID}" cherrypick \
+	&& useradd -l -u "${UID}" -g "${GID}" -m -d /cherrypick cherrypick \
+	&& find / -type d -path /sys -prune -o -type d -path /proc -prune -o -type f -perm /u+s -ignore_readdir_race -exec chmod u-s {} \; \
+	&& find / -type d -path /sys -prune -o -type d -path /proc -prune -o -type f -perm /g+s -ignore_readdir_race -exec chmod g-s {} \; \
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists
+
+# add package.json to add pnpm
+COPY ./package.json ./package.json
+RUN node -e "console.log(JSON.parse(require('node:fs').readFileSync('./package.json')).packageManager)" | xargs npm install -g
+
+USER cherrypick
+WORKDIR /cherrypick
+
+COPY --chown=cherrypick:cherrypick --from=target-builder /cherrypick/node_modules ./node_modules
+COPY --chown=cherrypick:cherrypick --from=target-builder /cherrypick/packages/backend/node_modules ./packages/backend/node_modules
+COPY --chown=cherrypick:cherrypick --from=target-builder /cherrypick/packages/cherrypick-js/node_modules ./packages/cherrypick-js/node_modules
+COPY --chown=cherrypick:cherrypick --from=target-builder /cherrypick/packages/misskey-reversi/node_modules ./packages/misskey-reversi/node_modules
+COPY --chown=cherrypick:cherrypick --from=target-builder /cherrypick/packages/misskey-bubble-game/node_modules ./packages/misskey-bubble-game/node_modules
+COPY --chown=cherrypick:cherrypick --from=native-builder /cherrypick/built ./built
+COPY --chown=cherrypick:cherrypick --from=native-builder /cherrypick/packages/cherrypick-js/built ./packages/cherrypick-js/built
+COPY --chown=cherrypick:cherrypick --from=native-builder /cherrypick/packages/misskey-reversi/built ./packages/misskey-reversi/built
+COPY --chown=cherrypick:cherrypick --from=native-builder /cherrypick/packages/misskey-bubble-game/built ./packages/misskey-bubble-game/built
+COPY --chown=cherrypick:cherrypick --from=native-builder /cherrypick/packages/backend/built ./packages/backend/built
+COPY --chown=cherrypick:cherrypick --from=native-builder /cherrypick/fluent-emojis /cherrypick/fluent-emojis
+COPY --chown=cherrypick:cherrypick . ./
+
 ENV LD_PRELOAD=/usr/local/lib/libjemalloc.so
 ENV MALLOC_CONF=background_thread:true,metadata_thp:auto,dirty_decay_ms:30000,muzzy_decay_ms:30000
 ENV NODE_ENV=production
 HEALTHCHECK --interval=5s --retries=20 CMD ["/bin/bash", "/cherrypick/healthcheck.sh"]
 ENTRYPOINT ["/usr/bin/tini", "--"]
-EXPOSE 3000
 CMD ["pnpm", "run", "migrateandstart"]

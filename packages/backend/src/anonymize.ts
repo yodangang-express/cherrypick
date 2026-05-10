@@ -1,6 +1,8 @@
 import type { MiNote } from '@/models/Note.js';
 import { MiUser } from '@/models/User.js';
 
+// 주의: 익명 채널은 반드시 "채널 외부로의 리노트 및 인용" 을 꺼둘 것.
+
 const moderators: string[] = process.env.MODERATORS?.split(',') ?? [];
 
 export function anonymizeNote(note: MiNote | any, meId: string | null = '') {

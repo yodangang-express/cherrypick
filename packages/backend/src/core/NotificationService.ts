@@ -12,7 +12,6 @@ import { DI } from '@/di-symbols.js';
 import type { UsersRepository } from '@/models/_.js';
 import type { MiUser } from '@/models/User.js';
 import type { MiNotification } from '@/models/Notification.js';
-import type { Packed } from '@/misc/json-schema.js';
 import { bindThis } from '@/decorators.js';
 import { GlobalEventService } from '@/core/GlobalEventService.js';
 import { PushNotificationService } from '@/core/PushNotificationService.js';
@@ -23,7 +22,6 @@ import type { Config } from '@/config.js';
 import { UserListService } from '@/core/UserListService.js';
 import { FilterUnionByProperty, groupedNotificationTypes, obsoleteNotificationTypes } from '@/types.js';
 import { trackPromise } from '@/misc/promise-tracker.js';
-import { anonymousUser } from '@/anonymize.js';
 
 @Injectable()
 export class NotificationService implements OnApplicationShutdown {
@@ -151,12 +149,10 @@ export class NotificationService implements OnApplicationShutdown {
 		const createdAt = new Date();
 		let notification: FilterUnionByProperty<MiNotification, 'type', T>;
 		let redisId: string;
-		let packed: Packed<'Notification'> | null;
 
 		do {
-			const notification_id = this.idService.gen()
 			notification = {
-				id: notification_id,
+				id: this.idService.gen(),
 				createdAt,
 				type: type,
 				...(notifierId ? {
@@ -164,23 +160,6 @@ export class NotificationService implements OnApplicationShutdown {
 				} : {}),
 				...data,
 			} as unknown as FilterUnionByProperty<MiNotification, 'type', T>;
-
-		  packed = await this.notificationEntityService.pack(notification, notifieeId, {});
-
-  		if (packed.note?.channel?.anonymous) {
-			  notification = {
-				  id: notification_id,
-			  	createdAt,
-			  	type: type,
-					notifierId: 'anonymous',
-			  	...data,
-			  } as unknown as FilterUnionByProperty<MiNotification, 'type', T>;
-
-  			if (notification.type === 'note') return notification;
-
-  			packed.user = anonymousUser();
-  			packed.userId = 'anonymous';
-  		}
 
 			try {
 				redisId = (await this.redisClient.xadd(
@@ -197,6 +176,8 @@ export class NotificationService implements OnApplicationShutdown {
 			break;
 			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 		} while (true);
+
+		const packed = await this.notificationEntityService.pack(notification, notifieeId, {});
 
 		if (packed == null) return null;
 

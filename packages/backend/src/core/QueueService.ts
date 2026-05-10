@@ -570,18 +570,18 @@ export class QueueService implements OnModuleInit {
 	}
 
 	@bindThis
-	public createReportAbuseJob(report: MiAbuseUserReport) {
-		return this.dbQueue.add('reportAbuse', report);
-	}
-
-	@bindThis
-	public createTruncateAccountJob(user: ThinUser, opts = {}) {
+	public createTruncateAccountJob(user: ThinUser) {
 		return this.dbQueue.add('truncateAccount', {
 			user: { id: user.id },
 		}, {
 			removeOnComplete: true,
 			removeOnFail: true,
 		});
+	}
+
+	@bindThis
+	public createReportAbuseJob(report: MiAbuseUserReport) {
+		return this.dbQueue.add('reportAbuse', report);
 	}
 
 	@bindThis
